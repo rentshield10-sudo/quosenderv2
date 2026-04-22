@@ -20,6 +20,12 @@ router.post('/quo/messages', (req: Request, res: Response) => {
     // Assuming 'event' itself is the message or event.data if it's wrapped.
     const messageData = event.data || event;
 
+    // Filter to only accept messages for the Primary inbox number
+    const allowedInboxNumber = 'PNAO2aXSml'; // OpenPhone ID for (201) 350-1990
+    if (messageData.phoneNumberId && messageData.phoneNumberId !== allowedInboxNumber) {
+      return res.status(200).json({ success: true, message: 'Ignored: not Primary inbox' });
+    }
+
     if (!messageData || !messageData.fromNumber || !messageData.body) {
       return res.status(400).json({ error: 'Invalid Quo message payload' });
     }

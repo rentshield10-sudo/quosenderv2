@@ -15,6 +15,12 @@ router.post('/sync/quo/conversations', async (req: Request, res: Response) => {
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
     const page = await quoClient.listConversations({ limit });
 
+    // Filter to only include the Primary inbox number
+    const allowedInboxNumber = 'PNAO2aXSml'; // OpenPhone ID for (201) 350-1990
+    if (page.data) {
+      page.data = page.data.filter(c => c.phoneNumberId === allowedInboxNumber);
+    }
+
     let fetched = page.data ? page.data.length : 0;
     let inserted = 0;
     let skipped = 0;
@@ -71,6 +77,10 @@ router.post('/sync/quo/messages', async (req: Request, res: Response) => {
     // So we must fetch the OpenPhone conversations list natively first, then match them.
     const convsPage = await quoClient.listConversations({ limit: 100 });
     let targets = convsPage.data || [];
+
+    // Filter to only include the Primary inbox number
+    const allowedInboxNumber = 'PNAO2aXSml'; // OpenPhone ID for (201) 350-1990
+    targets = targets.filter(c => c.phoneNumberId === allowedInboxNumber);
     
     if (externalConversationId) {
         targets = targets.filter(c => c.id === externalConversationId);
