@@ -43,6 +43,9 @@ export default function InboxApp() {
   const [composerText, setComposerText] = useState('');
   const [isSending, setIsSending] = useState(false);
 
+  const [fetchingMoreConvs, setFetchingMoreConvs] = useState(false);
+  const [fetchingMoreMsgs, setFetchingMoreMsgs] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const loadMoreConvsRef = useRef<HTMLDivElement | null>(null);
   const loadMoreMsgsRef = useRef<HTMLDivElement | null>(null);
@@ -53,7 +56,7 @@ export default function InboxApp() {
   };
 
   const observeConvs = (node: HTMLDivElement | null) => {
-    if (!node || !hasMoreConvs || loadingConvs) return;
+    if (!node || !hasMoreConvs || loadingConvs || fetchingMoreConvs) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -67,7 +70,7 @@ export default function InboxApp() {
   };
 
   const observeMsgs = (node: HTMLDivElement | null) => {
-    if (!node || !hasMoreMsgs || loadingMsgs || !activeConv) return;
+    if (!node || !hasMoreMsgs || loadingMsgs || fetchingMoreMsgs || !activeConv) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -112,7 +115,10 @@ export default function InboxApp() {
   }, [messages.length, isSending]); // Scroll down when new messages exist or sending starts
 
   const fetchConversations = async (reset = false, quiet = false) => {
-    if (!quiet && reset) setLoadingConvs(true);
+    if (!quiet) {
+      if (reset) setLoadingConvs(true);
+      else setFetchingMoreConvs(true);
+    }
     try {
       const cursorParam = !reset && convCursor ? `?cursor=${encodeURIComponent(convCursor)}` : '';
       const res = await fetch(`${API_URL}/conversations${cursorParam}`);
@@ -140,12 +146,18 @@ export default function InboxApp() {
     } catch (err) {
       console.error('Error fetching conversations', err);
     } finally {
-      if (!quiet) setLoadingConvs(false);
+      if (!quiet) {
+        if (reset) setLoadingConvs(false);
+        else setFetchingMoreConvs(false);
+      }
     }
   };
 
   const fetchMessages = async (convId: string, reset = false, quiet = false) => {
-    if (!quiet && reset) setLoadingMsgs(true);
+    if (!quiet) {
+      if (reset) setLoadingMsgs(true);
+      else setFetchingMoreMsgs(true);
+    }
     try {
       const cursorParam = !reset && msgCursor ? `?cursor=${encodeURIComponent(msgCursor)}` : '';
       const res = await fetch(`${API_URL}/conversations/${convId}/messages${cursorParam}`);
@@ -190,7 +202,10 @@ export default function InboxApp() {
     } catch (err) {
       console.error('Error fetching messages', err);
     } finally {
-      if (!quiet) setLoadingMsgs(false);
+      if (!quiet) {
+        if (reset) setLoadingMsgs(false);
+        else setFetchingMoreMsgs(false);
+      }
     }
   };
 
@@ -317,8 +332,12 @@ export default function InboxApp() {
               
               {hasMoreConvs && (
                 <div ref={observeConvs} className="load-more-btn" onClick={() => fetchConversations(false, false)} style={{ cursor: 'pointer' }}>
-                  <ChevronDown size={16} style={{ verticalAlign: 'middle', marginRight: 4 }} /> 
-                  Load older
+                  {fetchingMoreConvs ? (
+                    <div className="spinner" style={{ width: 14, height: 14, borderWidth: 2, verticalAlign: 'middle', marginRight: 8, borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}></div>
+                  ) : (
+                    <ChevronDown size={16} style={{ verticalAlign: 'middle', marginRight: 4 }} /> 
+                  )}
+                  {fetchingMoreConvs ? 'Loading...' : 'Load older'}
                 </div>
               )}
             </>
@@ -356,7 +375,10 @@ export default function InboxApp() {
             <div className="messages-container">
               {hasMoreMsgs && (
                 <div ref={observeMsgs} className="load-more-btn" style={{ margin: '0 auto', cursor: 'pointer' }} onClick={() => fetchMessages(activeConv.id, false, false)}>
-                  Load earlier messages...
+                  {fetchingMoreMsgs ? (
+                    <div className="spinner" style={{ width: 14, height: 14, borderWidth: 2, verticalAlign: 'middle', marginRight: 8, borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}></div>
+                  ) : null}
+                  {fetchingMoreMsgs ? 'Loading...' : 'Load earlier messages...'}
                 </div>
               )}
               
