@@ -52,7 +52,15 @@ npm run db:migrate
 npm run db:seed
 ```
 
-### 4. Start the services
+### 4. Start everything with one command
+
+```bash
+npm run dev
+```
+
+This launches API (`:4000`), sender adapter (`:4001`), and web UI (`:3000`) together in a single terminal.
+
+### 5. (Optional) Start services individually
 
 ```bash
 # Terminal 1: API server
