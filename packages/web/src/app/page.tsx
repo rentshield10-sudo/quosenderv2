@@ -240,10 +240,10 @@ export default function InboxApp() {
   };
 
   return (
-    <div className="app-layout" style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <div className="app-layout" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TemplateBuilder />
       
-      <div className="app-container" style={{ flex: 1, minHeight: 0 }}>
+      <div className="app-container">
       
       {/* SIDEBAR */}
       <div className="sidebar">

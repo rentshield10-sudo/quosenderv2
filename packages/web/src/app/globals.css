@@ -37,8 +37,7 @@ body {
   background-color: var(--bg-app);
   color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
   display: block;
 }
 
@@ -92,7 +91,8 @@ input, textarea {
   display: grid;
   grid-template-columns: 320px 1fr;
   width: 100%;
-  height: 100%;
+  height: 800px; /* Give the chat a solid height so its internal scroll works */
+  min-height: 70vh;
   background: radial-gradient(circle at top center, #1a2233 0%, var(--bg-app) 100%);
 }
 
