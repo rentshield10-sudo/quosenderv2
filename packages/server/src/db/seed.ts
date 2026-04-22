@@ -1,12 +1,10 @@
 import { db } from './database';
-import fs from 'fs';
-import path from 'path';
 
 function seed() {
-  const sql = fs.readFileSync(path.resolve(__dirname, 'seed.sql'), 'utf-8');
   console.log('Seeding database...');
-  db.exec(sql);
-  console.log('  ✓ Seed data inserted.');
+  // Note: We no longer execute seed.sql for fake chats.
+  // Properties and templates are handled by migration 003.
+  console.log('  ✓ Seed data inserted (skipping fake chats).');
   db.close();
 }
 
