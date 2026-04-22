@@ -14,6 +14,9 @@ CREATE TABLE IF NOT EXISTS properties (
   bedrooms TEXT,
   contact_phone TEXT,
   default_schedule TEXT,
+  time TEXT,
+  city TEXT,
+  state TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
