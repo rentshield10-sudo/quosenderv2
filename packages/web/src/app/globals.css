@@ -88,8 +88,7 @@ input, textarea {
 /* APP LAYOUT - Master Grid                                  */
 /* ───────────────────────────────────────────────────────── */
 .app-container {
-  display: grid;
-  grid-template-columns: 320px 1fr;
+  display: flex;
   width: calc(100vw - 32px);
   max-width: 1200px;
   height: 600px;
@@ -109,6 +108,8 @@ input, textarea {
   border-right: 1px solid var(--border-light);
   display: flex;
   flex-direction: column;
+  width: 320px;
+  flex-shrink: 0;
   height: 100%;
   z-index: 10;
 }
@@ -243,6 +244,7 @@ input, textarea {
 .chat-area {
   display: flex;
   flex-direction: column;
+  flex: 1;
   height: 100%;
   position: relative;
   background: transparent;
