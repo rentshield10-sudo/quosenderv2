@@ -44,18 +44,16 @@ export default function InboxApp() {
   const [isSending, setIsSending] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const loadMoreConvsRef = useRef<HTMLDivElement>(null);
-  const loadMoreMsgsRef = useRef<HTMLDivElement>(null);
+  const loadMoreConvsRef = useRef<HTMLDivElement | null>(null);
+  const loadMoreMsgsRef = useRef<HTMLDivElement | null>(null);
   
   // Auto-scroll logic
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Infinite scroll for conversations
-  useEffect(() => {
-    if (!hasMoreConvs || loadingConvs || !loadMoreConvsRef.current) return;
-    
+  const observeConvs = (node: HTMLDivElement | null) => {
+    if (!node || !hasMoreConvs || loadingConvs) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -64,15 +62,12 @@ export default function InboxApp() {
       },
       { rootMargin: '100px' }
     );
-    
-    observer.observe(loadMoreConvsRef.current);
-    return () => observer.disconnect();
-  }, [hasMoreConvs, loadingConvs, convCursor]);
+    observer.observe(node);
+    loadMoreConvsRef.current = node;
+  };
 
-  // Infinite scroll for messages
-  useEffect(() => {
-    if (!hasMoreMsgs || loadingMsgs || !loadMoreMsgsRef.current || !activeConv) return;
-    
+  const observeMsgs = (node: HTMLDivElement | null) => {
+    if (!node || !hasMoreMsgs || loadingMsgs || !activeConv) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -81,10 +76,9 @@ export default function InboxApp() {
       },
       { rootMargin: '100px' }
     );
-    
-    observer.observe(loadMoreMsgsRef.current);
-    return () => observer.disconnect();
-  }, [hasMoreMsgs, loadingMsgs, msgCursor, activeConv]);
+    observer.observe(node);
+    loadMoreMsgsRef.current = node;
+  };
   useEffect(() => {
     fetchConversations(true);
     const interval = setInterval(() => {
@@ -322,7 +316,7 @@ export default function InboxApp() {
               })}
               
               {hasMoreConvs && (
-                <div ref={loadMoreConvsRef} className="load-more-btn" onClick={() => fetchConversations(false, false)} style={{ cursor: 'pointer' }}>
+                <div ref={observeConvs} className="load-more-btn" onClick={() => fetchConversations(false, false)} style={{ cursor: 'pointer' }}>
                   <ChevronDown size={16} style={{ verticalAlign: 'middle', marginRight: 4 }} /> 
                   Load older
                 </div>
@@ -361,7 +355,7 @@ export default function InboxApp() {
 
             <div className="messages-container">
               {hasMoreMsgs && (
-                <div ref={loadMoreMsgsRef} className="load-more-btn" style={{ margin: '0 auto', cursor: 'pointer' }} onClick={() => fetchMessages(activeConv.id, false, false)}>
+                <div ref={observeMsgs} className="load-more-btn" style={{ margin: '0 auto', cursor: 'pointer' }} onClick={() => fetchMessages(activeConv.id, false, false)}>
                   Load earlier messages...
                 </div>
               )}
