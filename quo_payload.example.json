@@ -1,0 +1,16 @@
+{
+  "assignedTo": null,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "deletedAt": null,
+  "id": "CNxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "lastActivityAt": "2026-01-01T00:00:00.000Z",
+  "lastActivityId": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "mutedUntil": null,
+  "name": null,
+  "participants": [
+    "+10000000000"
+  ],
+  "phoneNumberId": "PNxxxxxxxxxx",
+  "snoozedUntil": null,
+  "updatedAt": "2026-01-01T00:00:00.000Z"
+}

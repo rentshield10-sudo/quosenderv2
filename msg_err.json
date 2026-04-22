@@ -1,0 +1,6 @@
+ERR: {
+  "message": "Quo upstream error: Bad Request",
+  "upstreamStatus": 400,
+  "upstreamBody": "{\"message\":\"The input was invalid\",\"code\":\"0200400\",\"status\":400,\"docs\":\"https://quo.com/docs\",\"title\":\"Bad Request\",\"errors\":[{\"path\":\"/participants\",\"message\":\"Expected array\",\"schema\":{\"type\":\"Array\"}},{\"path\":\"/participants\",\"message\":\"Expected required property\",\"schema\":{\"type\":\"Array\"}},{\"path\":\"/phoneNumberId\",\"message\":\"Expected required property\",\"schema\":{\"type\":\"TemplateLiteral\",\"pattern\":\"^PN(.*)$\"}},{\"path\":\"/phoneNumberId\",\"message\":\"Expected string\",\"schema\":{\"type\":\"TemplateLiteral\",\"pattern\":\"^PN(.*)$\"}}]}",
+  "upstreamUrl": "https://api.openphone.com/v1/messages?conversationId=CNxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&limit=1"
+}

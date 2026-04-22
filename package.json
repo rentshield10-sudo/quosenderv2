@@ -1,0 +1,15 @@
+{
+  "name": "quosenderv2",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:server": "npm run dev -w packages/server",
+    "dev:sender": "npm run dev -w packages/sender",
+    "dev:web": "npm run dev -w packages/web",
+    "db:migrate": "npm run db:migrate -w packages/server",
+    "db:seed": "npm run db:seed -w packages/server",
+    "db:reset": "npm run db:reset -w packages/server"
+  }
+}

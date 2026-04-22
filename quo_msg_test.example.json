@@ -1,0 +1,22 @@
+{
+  "request": {
+    "url": "https://api.openphone.com/v1/messages?phoneNumberId=PNxxxxxxxxxx&participants=%2B10000000000&limit=5"
+  },
+  "response": {
+    "data": [
+      {
+        "id": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "to": ["+10000000000"],
+        "from": "+10000000001",
+        "text": "Sample incoming message",
+        "phoneNumberId": "PNxxxxxxxxxx",
+        "direction": "incoming",
+        "status": "received",
+        "createdAt": "2026-01-01T00:00:00.000Z",
+        "updatedAt": "2026-01-01T00:00:00.000Z"
+      }
+    ],
+    "totalItems": 1,
+    "nextPageToken": null
+  }
+}
