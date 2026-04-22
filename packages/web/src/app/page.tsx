@@ -8,6 +8,7 @@ import { TemplateBuilder } from '../components/TemplateBuilder';
 // Types
 type Conversation = {
   id: string;
+  external_conversation_id?: string;
   contact_id: string;
   channel: string;
   unread_count: number;
@@ -39,12 +40,13 @@ export default function InboxApp() {
   const [msgCursor, setMsgCursor] = useState<string | null>(null);
   const [hasMoreMsgs, setHasMoreMsgs] = useState(false);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
+  const [fetchingMoreConvs, setFetchingMoreConvs] = useState(false);
+  const [fetchingMoreMsgs, setFetchingMoreMsgs] = useState(false);
 
   const [composerText, setComposerText] = useState('');
   const [isSending, setIsSending] = useState(false);
-
-  const [fetchingMoreConvs, setFetchingMoreConvs] = useState(false);
-  const [fetchingMoreMsgs, setFetchingMoreMsgs] = useState(false);
+  const [syncingQuo, setSyncingQuo] = useState(false);
+  const [quoCursorMap, setQuoCursorMap] = useState<Record<string, string | null>>({});
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const loadMoreConvsRef = useRef<IntersectionObserver | null>(null);
@@ -272,6 +274,31 @@ export default function InboxApp() {
     }
   };
 
+  const fetchMoreFromQuo = async () => {
+    if (!activeConv || !activeConv.external_conversation_id || syncingQuo) return;
+    setSyncingQuo(true);
+    try {
+      const cursor = quoCursorMap[activeConv.id] || undefined;
+      const res = await fetch(`${API_URL}/admin/sync/quo/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ externalConversationId: activeConv.external_conversation_id, cursor })
+      });
+      const json = await res.json();
+      
+      if (json.success) {
+        // Save the new cursor for next time
+        setQuoCursorMap(prev => ({ ...prev, [activeConv.id]: json.nextCursor || null }));
+        // Now hit local backend to update UI messages
+        await fetchMessages(activeConv.id, false, false);
+      }
+    } catch (err) {
+      console.error('Error fetching history from Quo', err);
+    } finally {
+      setSyncingQuo(false);
+    }
+  };
+
   const retryMessage = async (msgId: string) => {
     setMessages(prev => prev.map(m => m.id === msgId ? { ...m, status: 'sending' } : m));
     try {
@@ -378,14 +405,21 @@ export default function InboxApp() {
             */}
 
             <div className="messages-container">
-              {hasMoreMsgs && (
+              {hasMoreMsgs ? (
                 <div ref={observeMsgs} className="load-more-btn" style={{ margin: '0 auto', cursor: 'pointer' }} onClick={() => fetchMessages(activeConv.id, false, false)}>
                   {fetchingMoreMsgs ? (
                     <div className="spinner" style={{ width: 14, height: 14, borderWidth: 2, verticalAlign: 'middle', marginRight: 8, borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}></div>
                   ) : null}
                   {fetchingMoreMsgs ? 'Loading...' : 'Load earlier messages...'}
                 </div>
-              )}
+              ) : activeConv.external_conversation_id ? (
+                <div className="load-more-btn quo-fetch-btn" style={{ margin: '0 auto', cursor: 'pointer', color: '#60a5fa', borderColor: '#3b82f640' }} onClick={fetchMoreFromQuo}>
+                  {syncingQuo ? (
+                    <div className="spinner" style={{ width: 14, height: 14, borderWidth: 2, verticalAlign: 'middle', marginRight: 8, borderColor: '#60a5fa', borderTopColor: 'transparent' }}></div>
+                  ) : null}
+                  {syncingQuo ? 'Fetching from Quo...' : 'Fetch history from Quo'}
+                </div>
+              ) : null}
               
               {loadingMsgs && messages.length === 0 ? (
                 <div className="full-center"><div className="spinner"></div></div>

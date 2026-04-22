@@ -64,7 +64,7 @@ router.post('/sync/quo/conversations', async (req: Request, res: Response) => {
  */
 router.post('/sync/quo/messages', async (req: Request, res: Response) => {
   try {
-    const { externalConversationId } = req.body || {};
+    const { externalConversationId, cursor } = req.body || {};
     
     let fetched = 0;
     let inserted = 0;
@@ -72,6 +72,7 @@ router.post('/sync/quo/messages', async (req: Request, res: Response) => {
     let skipReasons: any[] = [];
     let samples: any[] = [];
     let attempts: any[] = []; // Explicit attempt tracking per user requests
+    let nextCursor: string | undefined = undefined;
 
     // Quo API requires `phoneNumberId` and `participants` to query messages.
     // So we must fetch the OpenPhone conversations list natively first, then match them.
@@ -89,7 +90,7 @@ router.post('/sync/quo/messages', async (req: Request, res: Response) => {
         }
     }
 
-    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 100;
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
 
     for (const remoteConv of targets) {
       if (!remoteConv.id || !remoteConv.phoneNumberId || !remoteConv.participants || remoteConv.participants.length === 0) {
@@ -109,8 +110,9 @@ router.post('/sync/quo/messages', async (req: Request, res: Response) => {
       }
 
       try {
-        const page = await quoClient.listMessages(remoteConv.phoneNumberId, remoteConv.participants || [], { limit });
+        const page = await quoClient.listMessages(remoteConv.phoneNumberId, remoteConv.participants || [], { limit, cursor });
         fetched += page.data ? page.data.length : 0;
+        nextCursor = page.nextCursor;
         
         if (samples.length === 0 && page.data && page.data.length > 0) {
             samples.push(page.data[0]);
@@ -185,7 +187,7 @@ router.post('/sync/quo/messages', async (req: Request, res: Response) => {
       }
     }
 
-    res.json({ success: true, counts: { fetched, inserted, skipped }, attempts, sample: samples[0] || null, skipReasons });
+    res.json({ success: true, counts: { fetched, inserted, skipped }, attempts, sample: samples[0] || null, skipReasons, nextCursor });
   } catch (err: any) {
     console.error('Quo Message Global Sync Error:', err);
     res.status(500).json({ error: 'Failed to sync messages', debug: err });
