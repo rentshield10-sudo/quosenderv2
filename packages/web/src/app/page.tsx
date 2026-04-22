@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent, useCallback } from 'react';
 import { Send, Clock, Check, CheckCheck, AlertCircle, MessageSquareOff, MessageCircle, ChevronDown } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { TemplateBuilder } from '../components/TemplateBuilder';
@@ -47,16 +47,19 @@ export default function InboxApp() {
   const [fetchingMoreMsgs, setFetchingMoreMsgs] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const loadMoreConvsRef = useRef<HTMLDivElement | null>(null);
-  const loadMoreMsgsRef = useRef<HTMLDivElement | null>(null);
+  const loadMoreConvsRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreMsgsRef = useRef<IntersectionObserver | null>(null);
   
   // Auto-scroll logic
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const observeConvs = (node: HTMLDivElement | null) => {
+  // We use useCallback so the ref re-attaches correctly when rendering
+  const observeConvs = useCallback((node: HTMLDivElement | null) => {
+    if (loadMoreConvsRef.current) loadMoreConvsRef.current.disconnect();
     if (!node || !hasMoreConvs || loadingConvs || fetchingMoreConvs) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -66,11 +69,13 @@ export default function InboxApp() {
       { rootMargin: '100px' }
     );
     observer.observe(node);
-    loadMoreConvsRef.current = node;
-  };
+    loadMoreConvsRef.current = observer;
+  }, [hasMoreConvs, loadingConvs, fetchingMoreConvs, convCursor]);
 
-  const observeMsgs = (node: HTMLDivElement | null) => {
+  const observeMsgs = useCallback((node: HTMLDivElement | null) => {
+    if (loadMoreMsgsRef.current) loadMoreMsgsRef.current.disconnect();
     if (!node || !hasMoreMsgs || loadingMsgs || fetchingMoreMsgs || !activeConv) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -80,8 +85,8 @@ export default function InboxApp() {
       { rootMargin: '100px' }
     );
     observer.observe(node);
-    loadMoreMsgsRef.current = node;
-  };
+    loadMoreMsgsRef.current = observer;
+  }, [hasMoreMsgs, loadingMsgs, fetchingMoreMsgs, msgCursor, activeConv]);
   useEffect(() => {
     fetchConversations(true);
     const interval = setInterval(() => {
