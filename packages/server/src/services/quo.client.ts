@@ -94,7 +94,7 @@ export class QuoClient {
   async listConversations(params?: { limit?: number; cursor?: string }): Promise<QuoPaginated<QuoConversation>> {
     const query = new URLSearchParams();
     if (params?.limit) query.append('limit', params.limit.toString());
-    if (params?.cursor) query.append('cursor', params.cursor);
+    if (params?.cursor) query.append('pageToken', params.cursor);
 
     return this.fetchQuo<QuoPaginated<QuoConversation>>(`/v1/conversations?${query.toString()}`);
   }

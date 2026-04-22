@@ -12,8 +12,9 @@ const router = Router();
  */
 router.post('/sync/quo/conversations', async (req: Request, res: Response) => {
   try {
+    const cursor = req.query.cursor as string | undefined;
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
-    const page = await quoClient.listConversations({ limit });
+    const page = await quoClient.listConversations({ limit, cursor });
 
     // Filter to only include the Primary inbox number
     const allowedInboxNumber = 'PNAO2aXSml'; // OpenPhone ID for (201) 350-1990
@@ -43,10 +44,10 @@ router.post('/sync/quo/conversations', async (req: Request, res: Response) => {
         remote.name || undefined
       );
 
-      const previewText = remote.lastMessageSnippet || 'No preview available';
-      const timestamp = remote.lastActivityAt || remote.updatedAt || remote.createdAt;
-
-      conversationService.updateLastMessage(conv.id, previewText, false, timestamp);
+      if (remote.lastMessageSnippet) {
+        const timestamp = remote.lastActivityAt || remote.updatedAt || remote.createdAt;
+        conversationService.updateLastMessage(conv.id, remote.lastMessageSnippet, false, timestamp);
+      }
       inserted++;
     }
 

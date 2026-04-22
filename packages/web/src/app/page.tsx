@@ -312,8 +312,8 @@ export default function InboxApp() {
       
       if (json.success) {
         setQuoCursorMap(prev => ({ ...prev, '__convs': json.nextCursor || null }));
-        // Resync local conversations to update the UI
-        await fetchConversations(true, false);
+        // Fetch the newly synced older conversations from the local DB without resetting the view
+        await fetchConversations(false, false);
       }
     } catch (err) {
       console.error('Error fetching conversations from Quo', err);
