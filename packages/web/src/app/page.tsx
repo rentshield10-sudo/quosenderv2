@@ -317,7 +317,7 @@ export default function InboxApp() {
               </div>
             </div>
             
-            {/* TEMPORARY DEBUG PANEL */}
+            {/* TEMPORARY DEBUG PANEL 
             <div style={{ background: '#330000', padding: 10, margin: 10, borderRadius: 5, fontSize: '0.8rem', color: 'red' }}>
                <div><strong>DEBUG PANEL</strong></div>
                <div>Conv ID: {activeConv.id}</div>
@@ -326,6 +326,7 @@ export default function InboxApp() {
                  {messages.length > 0 ? JSON.stringify(messages[messages.length - 1], null, 2) : 'No messages'}
                </pre>
             </div>
+            */}
 
             <div className="messages-container">
               {hasMoreMsgs && (
