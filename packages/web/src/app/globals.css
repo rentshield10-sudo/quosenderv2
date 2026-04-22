@@ -246,6 +246,7 @@ input, textarea {
   height: 100%;
   position: relative;
   background: transparent;
+  min-width: 0; /* Prevents flex children from pushing grid wider */
 }
 
 .chat-header {
@@ -300,7 +301,7 @@ input, textarea {
 .message-wrapper {
   display: flex;
   flex-direction: column;
-  max-width: 70%;
+  max-width: 85%;
   animation: fadeIn 0.3s ease forwards;
 }
 
@@ -320,6 +321,8 @@ input, textarea {
   line-height: 1.5;
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
   position: relative;
+  word-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 .inbound .message-bubble {
