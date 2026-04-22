@@ -299,6 +299,29 @@ export default function InboxApp() {
     }
   };
 
+  const fetchMoreConvsFromQuo = async () => {
+    if (syncingQuo) return;
+    setSyncingQuo(true);
+    try {
+      // Use the last known conversation cursor if we have one
+      const cursor = quoCursorMap['__convs'] || undefined;
+      const res = await fetch(`${API_URL}/admin/sync/quo/conversations?limit=10${cursor ? `&cursor=${cursor}` : ''}`, {
+        method: 'POST'
+      });
+      const json = await res.json();
+      
+      if (json.success) {
+        setQuoCursorMap(prev => ({ ...prev, '__convs': json.nextCursor || null }));
+        // Resync local conversations to update the UI
+        await fetchConversations(true, false);
+      }
+    } catch (err) {
+      console.error('Error fetching conversations from Quo', err);
+    } finally {
+      setSyncingQuo(false);
+    }
+  };
+
   const retryMessage = async (msgId: string) => {
     setMessages(prev => prev.map(m => m.id === msgId ? { ...m, status: 'sending' } : m));
     try {
@@ -362,7 +385,7 @@ export default function InboxApp() {
                 );
               })}
               
-              {hasMoreConvs && (
+              {hasMoreConvs ? (
                 <div ref={observeConvs} className="load-more-btn" onClick={() => fetchConversations(false, false)} style={{ cursor: 'pointer' }}>
                   {fetchingMoreConvs ? (
                     <div className="spinner" style={{ width: 14, height: 14, borderWidth: 2, verticalAlign: 'middle', marginRight: 8, borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}></div>
@@ -370,6 +393,13 @@ export default function InboxApp() {
                     <ChevronDown size={16} style={{ verticalAlign: 'middle', marginRight: 4 }} /> 
                   )}
                   {fetchingMoreConvs ? 'Loading...' : 'Load older'}
+                </div>
+              ) : (
+                <div className="load-more-btn quo-fetch-btn" style={{ cursor: 'pointer', color: '#60a5fa', borderColor: '#3b82f640', marginBottom: 12 }} onClick={fetchMoreConvsFromQuo}>
+                  {syncingQuo ? (
+                    <div className="spinner" style={{ width: 14, height: 14, borderWidth: 2, verticalAlign: 'middle', marginRight: 8, borderColor: '#60a5fa', borderTopColor: 'transparent' }}></div>
+                  ) : null}
+                  {syncingQuo ? 'Fetching from Quo...' : 'Fetch history from Quo'}
                 </div>
               )}
             </>
