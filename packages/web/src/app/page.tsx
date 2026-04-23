@@ -27,7 +27,7 @@ type Message = {
   created_at: string;
 };
 
-const API_URL = 'http://localhost:4000';
+const API_URL = '/api';
 
 export default function InboxApp() {
   const [conversations, setConversations] = useState<Conversation[]>([]);

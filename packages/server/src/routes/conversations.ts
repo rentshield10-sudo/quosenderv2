@@ -26,7 +26,7 @@ router.get('/', (req: Request, res: Response) => {
  */
 router.get('/:id', (req: Request, res: Response) => {
   try {
-    const conversation = conversationService.getById(req.params.id);
+    const conversation = conversationService.getById(req.params.id as string);
     if (!conversation) {
       return res.status(404).json({ error: 'Conversation not found' });
     }
@@ -43,7 +43,7 @@ router.get('/:id', (req: Request, res: Response) => {
  */
 router.post('/:id/read', (req: Request, res: Response) => {
   try {
-    const conversation = conversationService.markAsRead(req.params.id);
+    const conversation = conversationService.markAsRead(req.params.id as string);
     if (!conversation) {
       return res.status(404).json({ error: 'Conversation not found' });
     }

@@ -15,7 +15,7 @@ router.get('/conversations/:id/messages', (req: Request, res: Response) => {
   try {
     const cursor = req.query.cursor as string | undefined;
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
-    const result = messageService.listByConversation(req.params.id, cursor, limit);
+    const result = messageService.listByConversation(req.params.id as string, cursor, limit);
     res.json(result);
   } catch (err) {
     console.error('GET /conversations/:id/messages error:', err);
@@ -88,7 +88,7 @@ router.post('/messages/send', async (req: Request, res: Response) => {
  */
 router.post('/messages/:id/retry', async (req: Request, res: Response) => {
   try {
-    const message = messageService.getById(req.params.id);
+    const message = messageService.getById(req.params.id as string);
     if (!message) {
       return res.status(404).json({ error: 'Message not found' });
     }

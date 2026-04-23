@@ -10,9 +10,8 @@ if (envDbPath && !path.isAbsolute(envDbPath)) {
 }
 
 export const config = {
-  port: parseInt(process.env.PORT || '4000', 10),
+  port: parseInt(process.env.PORT || '3000', 10),
   databasePath: envDbPath || defaultDbPath,
-  senderAdapterUrl: process.env.SENDER_ADAPTER_URL || 'http://localhost:4001',
   pageSize: 30,
   quoApiKey: process.env.QUO_API_KEY || '',
   quoBaseUrl: process.env.QUO_BASE_URL || 'https://api.openphone.com',
