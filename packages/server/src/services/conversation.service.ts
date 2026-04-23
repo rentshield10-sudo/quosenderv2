@@ -15,7 +15,7 @@ export class ConversationService {
     let rows: ConversationListItem[];
 
     // Ensure we handle SQLite datetime mapping safely
-    if (cursor) {
+    if (cursor && cursor !== 'null' && cursor !== 'undefined') {
       const stmt = db.prepare(`
         SELECT c.*, ct.name AS contact_name, ct.phone_number AS contact_phone
         FROM conversations c

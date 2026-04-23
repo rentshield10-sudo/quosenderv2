@@ -127,7 +127,7 @@ export default function InboxApp() {
       else setFetchingMoreConvs(true);
     }
     try {
-      const cursorParam = !reset && convCursor ? `?cursor=${encodeURIComponent(convCursor)}` : '';
+      const cursorParam = (!reset && convCursor) ? `?cursor=${encodeURIComponent(convCursor)}` : '';
       const res = await fetch(`${API_URL}/conversations${cursorParam}`);
       const json = await res.json();
       
@@ -147,7 +147,7 @@ export default function InboxApp() {
         });
       }
       if (!quiet || reset) {
-        setConvCursor(json.cursor);
+        setConvCursor(json.cursor || null);
         setHasMoreConvs(json.hasMore);
       }
     } catch (err) {

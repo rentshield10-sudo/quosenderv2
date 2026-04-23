@@ -10,7 +10,7 @@ const router = Router();
  */
 router.get('/', (req: Request, res: Response) => {
   try {
-    const cursor = req.query.cursor as string | undefined;
+    const cursor = (req.query.cursor && req.query.cursor !== 'null' && req.query.cursor !== 'undefined') ? req.query.cursor as string : undefined;
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
     const result = conversationService.list(cursor, limit);
     res.json(result);
