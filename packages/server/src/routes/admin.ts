@@ -14,12 +14,16 @@ router.post('/sync/quo/conversations', async (req: Request, res: Response) => {
   try {
     const cursor = req.body.cursor || req.query.cursor as string | undefined;
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
+    
+    console.log(`[SYNC CONVERSATIONS] Requesting limit=${limit}, cursor=${cursor}`);
     const page = await quoClient.listConversations({ limit, cursor });
 
     // Filter to only include the Primary inbox number
     const allowedInboxNumber = 'PNAO2aXSml'; // OpenPhone ID for (201) 350-1990
     if (page.data) {
+      const originalCount = page.data.length;
       page.data = page.data.filter(c => c.phoneNumberId === allowedInboxNumber);
+      console.log(`[SYNC CONVERSATIONS] Filtered primary inbox: ${page.data.length} kept out of ${originalCount}`);
     }
 
     let fetched = page.data ? page.data.length : 0;
@@ -68,6 +72,8 @@ router.post('/sync/quo/messages', async (req: Request, res: Response) => {
     const { externalConversationId } = req.body || {};
     const cursor = req.body.cursor || req.query.cursor as string | undefined;
     
+    console.log(`[SYNC MESSAGES] Requesting conv=${externalConversationId}, cursor=${cursor}`);
+    
     let fetched = 0;
     let inserted = 0;
     let skipped = 0;
@@ -93,6 +99,7 @@ router.post('/sync/quo/messages', async (req: Request, res: Response) => {
     }
 
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+    console.log(`[SYNC MESSAGES] Found ${targets.length} target conversation(s) to pull from Quo`);
 
     for (const remoteConv of targets) {
       if (!remoteConv.id || !remoteConv.phoneNumberId || !remoteConv.participants || remoteConv.participants.length === 0) {
@@ -112,9 +119,11 @@ router.post('/sync/quo/messages', async (req: Request, res: Response) => {
       }
 
       try {
+        console.log(`[SYNC MESSAGES] Calling Quo listMessages for phone=${remoteConv.phoneNumberId} parts=${remoteConv.participants}, cursor=${cursor}`);
         const page = await quoClient.listMessages(remoteConv.phoneNumberId, remoteConv.participants || [], { limit, cursor });
         fetched += page.data ? page.data.length : 0;
         nextCursor = page.nextCursor;
+        console.log(`[SYNC MESSAGES] Received ${page.data?.length || 0} messages. Next cursor: ${nextCursor}`);
         
         if (samples.length === 0 && page.data && page.data.length > 0) {
             samples.push(page.data[0]);
