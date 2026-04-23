@@ -31,6 +31,7 @@ router.post('/sync/quo/conversations', async (req: Request, res: Response) => {
     let skipped = 0;
     let skipReasons: any[] = [];
     let sample = page.data && page.data.length > 0 ? page.data[0] : null;
+    const nextCursor = page.nextPageToken || page.nextCursor || undefined;
 
     for (const remote of page.data || []) {
       const contactPhone = remote.participants && remote.participants.length > 0 ? remote.participants[0] : null;
@@ -55,7 +56,8 @@ router.post('/sync/quo/conversations', async (req: Request, res: Response) => {
       inserted++;
     }
 
-    res.json({ success: true, counts: { fetched, inserted, skipped }, sample, skipReasons, hasNextPage: !!(page.hasNextPage || page.nextPageToken), nextCursor: page.nextPageToken || page.nextCursor });
+    console.log(`[SYNC CONVERSATIONS] Complete. Inserted ${inserted}, Next Cursor: ${nextCursor}`);
+    res.json({ success: true, counts: { fetched, inserted, skipped }, sample, skipReasons, hasNextPage: !!nextCursor, nextCursor });
   } catch (err: any) {
     console.error('Quo Conv Sync Error:', err);
     res.status(500).json({ error: 'Failed to sync conversations', debug: err });
@@ -122,7 +124,8 @@ router.post('/sync/quo/messages', async (req: Request, res: Response) => {
         console.log(`[SYNC MESSAGES] Calling Quo listMessages for phone=${remoteConv.phoneNumberId} parts=${remoteConv.participants}, cursor=${cursor}`);
         const page = await quoClient.listMessages(remoteConv.phoneNumberId, remoteConv.participants || [], { limit, cursor });
         fetched += page.data ? page.data.length : 0;
-        nextCursor = page.nextPageToken || page.nextCursor;
+        // Check for both nextPageToken and nextCursor based on QuoPaginated type
+        nextCursor = page.nextPageToken || page.nextCursor || undefined;
         console.log(`[SYNC MESSAGES] Received ${page.data?.length || 0} messages. Next cursor: ${nextCursor}`);
         
         if (samples.length === 0 && page.data && page.data.length > 0) {
