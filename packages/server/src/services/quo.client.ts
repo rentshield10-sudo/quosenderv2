@@ -32,8 +32,10 @@ export interface QuoMessage {
 
 export interface QuoPaginated<T> {
   data: T[];
-  hasNextPage: boolean;
+  hasNextPage?: boolean;
   nextCursor?: string;
+  nextPageToken?: string | null;
+  totalItems?: number;
 }
 
 export class QuoClient {
