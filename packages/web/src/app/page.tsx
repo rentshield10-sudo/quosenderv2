@@ -303,7 +303,6 @@ export default function InboxApp() {
     if (syncingQuo) return;
     setSyncingQuo(true);
     try {
-      // Use the last known conversation cursor if we have one
       const cursor = quoCursorMap['__convs'] || undefined;
       const res = await fetch(`${API_URL}/admin/sync/quo/conversations?limit=10`, {
         method: 'POST',
@@ -313,8 +312,8 @@ export default function InboxApp() {
       const json = await res.json();
       
       if (json.success) {
+        // If there is a nextCursor, store it. If missing, it means we hit the end of Quo.
         setQuoCursorMap(prev => ({ ...prev, '__convs': json.nextCursor || null }));
-        // Fetch the newly synced older conversations from the local DB without resetting the view
         await fetchConversations(false, false);
       }
     } catch (err) {

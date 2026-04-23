@@ -12,7 +12,7 @@ const router = Router();
  */
 router.post('/sync/quo/conversations', async (req: Request, res: Response) => {
   try {
-    const cursor = req.body.cursor || req.query.cursor as string | undefined;
+    const cursor = (req.body.cursor || req.query.cursor) as string | undefined;
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
     
     console.log(`[SYNC CONVERSATIONS] Requesting limit=${limit}, cursor=${cursor}`);
@@ -70,7 +70,7 @@ router.post('/sync/quo/conversations', async (req: Request, res: Response) => {
 router.post('/sync/quo/messages', async (req: Request, res: Response) => {
   try {
     const { externalConversationId } = req.body || {};
-    const cursor = req.body.cursor || req.query.cursor as string | undefined;
+    const cursor = (req.body.cursor || req.query.cursor) as string | undefined;
     
     console.log(`[SYNC MESSAGES] Requesting conv=${externalConversationId}, cursor=${cursor}`);
     
