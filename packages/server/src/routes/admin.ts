@@ -84,20 +84,31 @@ router.post('/sync/quo/messages', async (req: Request, res: Response) => {
     let attempts: any[] = []; // Explicit attempt tracking per user requests
     let nextCursor: string | undefined = undefined;
 
-    // Quo API requires `phoneNumberId` and `participants` to query messages.
-    // So we must fetch the OpenPhone conversations list natively first, then match them.
-    const convsPage = await quoClient.listConversations({ limit: 100 });
-    let targets = convsPage.data || [];
-
-    // Filter to only include the Primary inbox number
+    let targets: any[] = [];
     const allowedInboxNumber = 'PNAO2aXSml'; // OpenPhone ID for (201) 350-1990
-    targets = targets.filter(c => c.phoneNumberId === allowedInboxNumber);
-    
+
     if (externalConversationId) {
-        targets = targets.filter(c => c.id === externalConversationId);
-        if (targets.length === 0) {
-            return res.status(404).json({ error: 'Quo upstream conversation not found (API did not return it in list)' });
+        const localStmt = await import('../db/database').then(m => m.db.prepare(`
+          SELECT c.id, c.external_conversation_id, ct.phone_number AS contact_phone 
+          FROM conversations c 
+          JOIN contacts ct ON c.contact_id = ct.id 
+          WHERE c.external_conversation_id = ?
+        `));
+        const localConvRow = localStmt.get(externalConversationId) as any;
+        if (!localConvRow || !localConvRow.contact_phone) {
+            return res.status(404).json({ error: 'Local conversation/contact not found for external ID' });
         }
+        targets = [{
+            id: externalConversationId,
+            phoneNumberId: allowedInboxNumber,
+            participants: [localConvRow.contact_phone]
+        }];
+    } else {
+        // Quo API requires \`phoneNumberId\` and \`participants\` to query messages.
+        // So we must fetch the OpenPhone conversations list natively first, then match them.
+        const convsPage = await quoClient.listConversations({ limit: 100 });
+        targets = convsPage.data || [];
+        targets = targets.filter(c => c.phoneNumberId === allowedInboxNumber);
     }
 
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;

@@ -275,10 +275,12 @@ export default function InboxApp() {
   };
 
   const fetchMoreFromQuo = async () => {
+    console.log('fetchMoreFromQuo clicked', { activeConvId: activeConv?.id, externalId: activeConv?.external_conversation_id, syncingQuo });
     if (!activeConv || !activeConv.external_conversation_id || syncingQuo) return;
     setSyncingQuo(true);
     try {
       const cursor = quoCursorMap[activeConv.id] || undefined;
+      console.log('Sending cursor to backend:', cursor);
       const res = await fetch(`${API_URL}/admin/sync/quo/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -286,6 +288,7 @@ export default function InboxApp() {
       });
       const json = await res.json();
       
+      console.log('Backend sync messages response:', json);
       if (json.success) {
         // Save the new cursor for next time
         setQuoCursorMap(prev => ({ ...prev, [activeConv.id]: json.nextCursor || null }));
