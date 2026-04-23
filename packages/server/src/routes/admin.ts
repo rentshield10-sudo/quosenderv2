@@ -12,7 +12,7 @@ const router = Router();
  */
 router.post('/sync/quo/conversations', async (req: Request, res: Response) => {
   try {
-    const cursor = req.query.cursor as string | undefined;
+    const cursor = req.body.cursor as string | undefined;
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
     const page = await quoClient.listConversations({ limit, cursor });
 

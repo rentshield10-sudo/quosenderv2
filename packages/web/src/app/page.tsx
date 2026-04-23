@@ -305,8 +305,10 @@ export default function InboxApp() {
     try {
       // Use the last known conversation cursor if we have one
       const cursor = quoCursorMap['__convs'] || undefined;
-      const res = await fetch(`${API_URL}/admin/sync/quo/conversations?limit=10${cursor ? `&cursor=${cursor}` : ''}`, {
-        method: 'POST'
+      const res = await fetch(`${API_URL}/admin/sync/quo/conversations?limit=10`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cursor })
       });
       const json = await res.json();
       
