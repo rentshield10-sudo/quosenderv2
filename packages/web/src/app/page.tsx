@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, FormEvent, useCallback } from 'react';
 import { Send, Clock, Check, CheckCheck, AlertCircle, MessageSquareOff, MessageCircle, ChevronDown } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { TemplateBuilder } from '../components/TemplateBuilder';
+import { ScheduleBooking } from '../components/ScheduleBooking';
 
 // Types
 type Conversation = {
@@ -505,7 +506,9 @@ export default function InboxApp() {
         )}
       </div>
 
-    </div>
+      </div>
+
+      <ScheduleBooking />
     </div>
   );
 }

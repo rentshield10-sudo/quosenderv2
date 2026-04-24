@@ -8,6 +8,7 @@ import messageRoutes from './routes/messages';
 import webhookRoutes from './routes/webhooks';
 import adminRoutes from './routes/admin';
 import { templatesRouter, propertiesRouter } from './routes/templates';
+import { scheduleBookingRouter } from './routes/schedule-booking';
 
 const dev = process.env.NODE_ENV !== 'production';
 const webDir = path.resolve(__dirname, '../../web');
@@ -37,6 +38,7 @@ nextApp.prepare().then(() => {
   apiRouter.use('/webhooks', webhookRoutes);    // /api/webhooks/quo/messages, /api/webhooks/status
   apiRouter.use('/templates', templatesRouter);
   apiRouter.use('/properties', propertiesRouter);
+  apiRouter.use('/schedule-booking', scheduleBookingRouter);
 
   // ── Health check ───────────────────────────────────────
   apiRouter.get('/health', (_req, res) => {

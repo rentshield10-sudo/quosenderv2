@@ -1,0 +1,195 @@
+{
+  "properties": [
+    {
+      "id": "prop-1",
+      "name": "39 Dewey St FLOOR 2",
+      "address": "39 Dewey St FLOOR 2, Bloomfield, NJ 07003",
+      "price": "$2,500/mo",
+      "bedrooms": "3-bedroom",
+      "contact_phone": "201-231-7775",
+      "default_schedule": "Wednesday 7:15PM",
+      "created_at": "2026-04-21 23:52:35",
+      "updated_at": "2026-04-22 05:50:20",
+      "time": "7:15PM",
+      "city": "Bloomfield",
+      "state": "NJ"
+    },
+    {
+      "id": "prop-8eb7cb21",
+      "name": "242 Hillcrest Ter",
+      "address": "242 Hillcrest Ter, Roselle, NJ 07203",
+      "price": "$3,000/mo",
+      "bedrooms": "5-bedroom",
+      "contact_phone": "201-231-7775",
+      "default_schedule": "tomorrow Friday 7:45PM",
+      "created_at": "2026-04-22 01:00:29",
+      "updated_at": "2026-04-23 18:40:53",
+      "time": "7:45PM",
+      "city": "Roselle",
+      "state": "NJ"
+    },
+    {
+      "id": "prop-50cee349",
+      "name": "179 Ridgewood Ave Floor 1",
+      "address": "179 Ridgewood Ave Floor 1, Newark, NJ 07108",
+      "price": "$1,850/mo",
+      "bedrooms": "3-bedroom",
+      "contact_phone": "201-231-7775",
+      "default_schedule": "tomorrow Friday 7:15PM",
+      "created_at": "2026-04-22 05:49:47",
+      "updated_at": "2026-04-23 18:40:21",
+      "time": "7:15PM",
+      "city": "Newark",
+      "state": "NJ"
+    },
+    {
+      "id": "prop-aa62c24f",
+      "name": "44 Thomas St #1R",
+      "address": "44 Thomas St #1R, Bloomfield, NJ 07003",
+      "price": "$2,600/mo",
+      "bedrooms": "3-bedroom",
+      "contact_phone": "201-231-7775",
+      "default_schedule": "tomorrow Friday 5:30PM",
+      "created_at": "2026-04-22 05:51:46",
+      "updated_at": "2026-04-23 18:39:22",
+      "time": "5:30PM",
+      "city": "Bloomfield",
+      "state": "NJ"
+    },
+    {
+      "id": "prop-ec42a19e",
+      "name": "31 Linden Ave APT 2",
+      "address": "31 Linden Ave APT 2, East Orange, NJ 07018",
+      "price": "$1,900/mo",
+      "bedrooms": "3-bedroom",
+      "contact_phone": "201-231-7775",
+      "default_schedule": "tomorrow Friday 6:30PM",
+      "created_at": "2026-04-22 05:53:04",
+      "updated_at": "2026-04-23 18:39:48",
+      "time": "6:30PM",
+      "city": "East Orange",
+      "state": "NJ"
+    },
+    {
+      "id": "prop-a86b2612",
+      "name": "48 Monroe St Floor 1",
+      "address": "48 Monroe St Floor 1, Garfield, NJ 07026",
+      "price": "$2,300/mo",
+      "bedrooms": "3-bedroom",
+      "contact_phone": "201-231-7775",
+      "default_schedule": "tomorrow Friday 8:30PM",
+      "created_at": "2026-04-22 05:53:55",
+      "updated_at": "2026-04-23 18:41:19",
+      "time": "8:30PM",
+      "city": "Garfield",
+      "state": "NJ"
+    },
+    {
+      "id": "prop-17d70334",
+      "name": "15 Webster St",
+      "address": "15 Webster St, Newark, NJ 07104",
+      "price": "$2,000/mo",
+      "bedrooms": "3-bedroom",
+      "contact_phone": "201-231-7775",
+      "default_schedule": "tomorrow Friday 6:45PM",
+      "created_at": "2026-04-22 05:54:50",
+      "updated_at": "2026-04-23 21:36:11",
+      "time": "6:45PM",
+      "city": "Newark",
+      "state": "NJ"
+    },
+    {
+      "id": "prop-eb5a7988",
+      "name": "15 Webster St #3",
+      "address": "15 Webster St #3, Newark, NJ 07104",
+      "price": "$1,900/mo",
+      "bedrooms": "3-bedroom",
+      "contact_phone": "201-231-7775",
+      "default_schedule": "tomorrow Friday 6:45PM",
+      "created_at": "2026-04-22 05:55:33",
+      "updated_at": "2026-04-23 18:40:08",
+      "time": "6:45PM",
+      "city": "Newark",
+      "state": "NJ"
+    },
+    {
+      "id": "prop-21db62df",
+      "name": "133 Shepard Ave #2",
+      "address": "133 Shepard Ave #2, East Orange, NJ 07018",
+      "price": "$1,900/mo",
+      "bedrooms": "3-bedroom",
+      "contact_phone": "201-231-7775",
+      "default_schedule": "tomorrow Friday 6PM",
+      "created_at": "2026-04-22 05:56:27",
+      "updated_at": "2026-04-23 18:39:35",
+      "time": "6PM",
+      "city": "East Orange",
+      "state": "NJ"
+    }
+  ],
+  "templates": [
+    {
+      "id": "tmpl-1",
+      "name": "Template 1 (Initial Outreach)",
+      "body": "Hi, my name is Moses and we are reaching out to you because you requested information in our {{bedrooms}} apartment in {{city}}, {{state}}. Please let me know if you would like to schedule a showing appointment. The address is {{address}}. And the price is {{price}}.",
+      "created_at": "2026-04-21 23:52:35",
+      "updated_at": "2026-04-22 01:45:30"
+    },
+    {
+      "id": "tmpl-2",
+      "name": "Template 2 (Schedule Invitation)",
+      "body": "We are able to show the unit {{schedule}} at {{address}}, will you join?",
+      "created_at": "2026-04-21 23:52:35",
+      "updated_at": "2026-04-21 23:52:35"
+    },
+    {
+      "id": "tmpl-3",
+      "name": "Template 3 (Appointment Confirmation)",
+      "body": "Great! Your appointment is set for {{schedule}}. The address is {{address}}. Please call this number {{contactPhone}} if you do not see anyone in the front.",
+      "created_at": "2026-04-21 23:52:35",
+      "updated_at": "2026-04-21 23:52:35"
+    },
+    {
+      "id": "tmpl-4",
+      "name": "Template 4 (Day-of Confirmation)",
+      "body": "Hi! We are reaching out to you to confirm your appointment to view our {{bedrooms}} apartment today at {{time}}. The address is {{address}}. Please let me know if you will be there at {{time}}. Thank you.",
+      "created_at": "2026-04-21 23:52:35",
+      "updated_at": "2026-04-21 23:52:35"
+    },
+    {
+      "id": "tmpl-5",
+      "name": "Template 5 (Re-engagement)",
+      "body": "Hi, we just wanted to know if you are still interested in booking a showing for our {{bedrooms}} house for rent in {{address}}. If so, please let me know so we can schedule a showing appointment.",
+      "created_at": "2026-04-21 23:52:35",
+      "updated_at": "2026-04-21 23:52:35"
+    },
+    {
+      "id": "tmpl-6",
+      "name": "Template 6 (Requirements)",
+      "body": "Hi!\n\nThese are the requirements.\n\n1.5 Month Security\n1 Month Rent - Prior to moving in\nNo Evictions in the past 7 years\nIncome Requirement is 2.5 the rent\nPet fee $50 dollars on top of rent (under 15 pounds)\nRent is {{price}}.\n\nPlease confirm that all requirements are met so we can set up the appointment. Thank you.",
+      "created_at": "2026-04-21 23:52:35",
+      "updated_at": "2026-04-21 23:52:35"
+    },
+    {
+      "id": "tmpl-7d88ee97",
+      "name": "Template 7",
+      "body": "We will keep you posted on the next schedule",
+      "created_at": "2026-04-22 05:31:16",
+      "updated_at": "2026-04-22 05:31:16"
+    },
+    {
+      "id": "tmpl-60c0a647",
+      "name": "Template 8",
+      "body": "Hi sorry we've missed you're call, which apartment address are you calling? may i have your name please.",
+      "created_at": "2026-04-22 05:31:58",
+      "updated_at": "2026-04-22 05:31:58"
+    },
+    {
+      "id": "tmpl-efdfa90e",
+      "name": "Template 9",
+      "body": "Im afraid this is the only time that's available, we have other schedule to attend to.",
+      "created_at": "2026-04-22 05:34:11",
+      "updated_at": "2026-04-22 05:34:11"
+    }
+  ]
+}
