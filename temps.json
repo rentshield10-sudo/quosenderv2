@@ -21,9 +21,9 @@
       "price": "$3,000/mo",
       "bedrooms": "5-bedroom",
       "contact_phone": "201-231-7775",
-      "default_schedule": "tomorrow Friday 7:45PM",
+      "default_schedule": "tomorrow Monday 7:45PM",
       "created_at": "2026-04-22 01:00:29",
-      "updated_at": "2026-04-23 18:40:53",
+      "updated_at": "2026-04-26 21:11:34",
       "time": "7:45PM",
       "city": "Roselle",
       "state": "NJ"
@@ -32,12 +32,12 @@
       "id": "prop-50cee349",
       "name": "179 Ridgewood Ave Floor 1",
       "address": "179 Ridgewood Ave Floor 1, Newark, NJ 07108",
-      "price": "$1,850/mo",
+      "price": "$1,800/mo",
       "bedrooms": "3-bedroom",
       "contact_phone": "201-231-7775",
-      "default_schedule": "tomorrow Friday 7:15PM",
+      "default_schedule": "tomorrow Monday 7:15PM",
       "created_at": "2026-04-22 05:49:47",
-      "updated_at": "2026-04-23 18:40:21",
+      "updated_at": "2026-04-26 21:11:14",
       "time": "7:15PM",
       "city": "Newark",
       "state": "NJ"
@@ -49,9 +49,9 @@
       "price": "$2,600/mo",
       "bedrooms": "3-bedroom",
       "contact_phone": "201-231-7775",
-      "default_schedule": "tomorrow Friday 5:30PM",
+      "default_schedule": "tomorrow Monday 5:30PM",
       "created_at": "2026-04-22 05:51:46",
-      "updated_at": "2026-04-23 18:39:22",
+      "updated_at": "2026-04-26 21:08:10",
       "time": "5:30PM",
       "city": "Bloomfield",
       "state": "NJ"
@@ -63,10 +63,10 @@
       "price": "$1,900/mo",
       "bedrooms": "3-bedroom",
       "contact_phone": "201-231-7775",
-      "default_schedule": "tomorrow Friday 6:30PM",
+      "default_schedule": "tomorrow Monday 6PM",
       "created_at": "2026-04-22 05:53:04",
-      "updated_at": "2026-04-23 18:39:48",
-      "time": "6:30PM",
+      "updated_at": "2026-04-26 21:42:18",
+      "time": "6PM",
       "city": "East Orange",
       "state": "NJ"
     },
@@ -74,12 +74,12 @@
       "id": "prop-a86b2612",
       "name": "48 Monroe St Floor 1",
       "address": "48 Monroe St Floor 1, Garfield, NJ 07026",
-      "price": "$2,300/mo",
+      "price": "$2,200/mo",
       "bedrooms": "3-bedroom",
       "contact_phone": "201-231-7775",
-      "default_schedule": "tomorrow Friday 8:30PM",
+      "default_schedule": "tomorrow Monday 8:30PM",
       "created_at": "2026-04-22 05:53:55",
-      "updated_at": "2026-04-23 18:41:19",
+      "updated_at": "2026-04-26 21:12:02",
       "time": "8:30PM",
       "city": "Garfield",
       "state": "NJ"
@@ -88,13 +88,13 @@
       "id": "prop-17d70334",
       "name": "15 Webster St",
       "address": "15 Webster St, Newark, NJ 07104",
-      "price": "$2,000/mo",
+      "price": "$1,900/mo",
       "bedrooms": "3-bedroom",
       "contact_phone": "201-231-7775",
-      "default_schedule": "tomorrow Friday 6:45PM",
+      "default_schedule": "tomorrow Monday 6:30PM",
       "created_at": "2026-04-22 05:54:50",
-      "updated_at": "2026-04-23 21:36:11",
-      "time": "6:45PM",
+      "updated_at": "2026-04-26 21:42:41",
+      "time": "6:30PM",
       "city": "Newark",
       "state": "NJ"
     },
@@ -105,10 +105,10 @@
       "price": "$1,900/mo",
       "bedrooms": "3-bedroom",
       "contact_phone": "201-231-7775",
-      "default_schedule": "tomorrow Friday 6:45PM",
+      "default_schedule": "tomorrow Monday 6:30PM",
       "created_at": "2026-04-22 05:55:33",
-      "updated_at": "2026-04-23 18:40:08",
-      "time": "6:45PM",
+      "updated_at": "2026-04-26 21:42:47",
+      "time": "6:30PM",
       "city": "Newark",
       "state": "NJ"
     },
@@ -119,10 +119,10 @@
       "price": "$1,900/mo",
       "bedrooms": "3-bedroom",
       "contact_phone": "201-231-7775",
-      "default_schedule": "tomorrow Friday 6PM",
+      "default_schedule": "tomorrow Monday 5:30PM",
       "created_at": "2026-04-22 05:56:27",
-      "updated_at": "2026-04-23 18:39:35",
-      "time": "6PM",
+      "updated_at": "2026-04-26 21:42:00",
+      "time": "5:30PM",
       "city": "East Orange",
       "state": "NJ"
     }
@@ -138,14 +138,14 @@
     {
       "id": "tmpl-2",
       "name": "Template 2 (Schedule Invitation)",
-      "body": "We are able to show the unit {{schedule}} at {{address}}, will you join?",
+      "body": "We are able to show the unit {{default_schedule}} at {{address}}, will you join?",
       "created_at": "2026-04-21 23:52:35",
       "updated_at": "2026-04-21 23:52:35"
     },
     {
       "id": "tmpl-3",
       "name": "Template 3 (Appointment Confirmation)",
-      "body": "Great! Your appointment is set for {{schedule}}. The address is {{address}}. Please call this number {{contactPhone}} if you do not see anyone in the front.",
+      "body": "Great! Your appointment is set for {{default_schedule}}. The address is {{address}}. Please call this number {{contact_phone}} if you do not see anyone in the front.",
       "created_at": "2026-04-21 23:52:35",
       "updated_at": "2026-04-21 23:52:35"
     },
@@ -190,6 +190,13 @@
       "body": "Im afraid this is the only time that's available, we have other schedule to attend to.",
       "created_at": "2026-04-22 05:34:11",
       "updated_at": "2026-04-22 05:34:11"
+    },
+    {
+      "id": "tmpl-9bbce326",
+      "name": "Template 11",
+      "body": "Hi, we wanted to reach out to let you know that we have decreased the price to {{price}} for our {{bedrooms}} apartment 1st Floor located at {{address}}. We were reaching out to see if you would like to schedule a showing for this.",
+      "created_at": "2026-04-24 21:50:27",
+      "updated_at": "2026-04-24 21:58:53"
     }
   ]
 }

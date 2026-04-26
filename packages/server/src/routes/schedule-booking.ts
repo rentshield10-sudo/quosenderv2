@@ -29,6 +29,7 @@ scheduleBookingRouter.post('/parse-and-load', (req, res) => {
             extractedPhone = '+1' + digits.slice(digits.length - 10);
         }
     } else {
+        // Try even more aggressive phone extraction (look for any 10-11 digits)
         const digitsOnly = line.replace(/\D/g, '');
         if (digitsOnly.length >= 10 && digitsOnly.length <= 11) {
             extractedPhone = '+1' + digitsOnly.slice(digitsOnly.length - 10);
@@ -39,45 +40,113 @@ scheduleBookingRouter.post('/parse-and-load', (req, res) => {
 
     // Try finding property in the same line
     let matchedProp = null;
-    const normalizeAddress = (addr: string) => {
-      // lower case, replace common words, remove punctuation
-      return addr.toLowerCase()
-        .replace(/#|apt|apartment|floor|fl|ste|suite/g, ' ')
-        .replace(/[^a-z0-9\s]/g, '')
+    const normalize = (val: string) => {
+      if (!val) return '';
+      return val.toLowerCase()
+        .replace(/#|apt|apartment|floor|fl|ste|suite|floor|st|ave|rd|blvd|lane|ln|drive|dr|court|ct|street|avenue|road|boulevard/g, ' ')
+        .replace(/[^a-z0-9\s]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
     };
+
+    // Remove phone number from line to avoid matching digits in address
+    let lineForMatching = line;
+    if (digitMatches) {
+        lineForMatching = line.replace(digitMatches[1], ' ');
+    }
     
-    // Create a normalized version of the line
-    const normalizedLine = normalizeAddress(line);
+    const normLine = normalize(lineForMatching);
+    console.log(`[PARSE-DEBUG] Row: "${line}"`);
+    console.log(`[PARSE-DEBUG] Normalized Line: "${normLine}"`);
+    console.log(`[PARSE-DEBUG] Total Properties to match: ${properties.length}`);
 
     for (const p of properties) {
-       // Match by address or name if they are sufficiently long
-       const hasName = p.name && p.name.length > 3 && line.toLowerCase().includes(p.name.toLowerCase());
        let hasAddress = false;
 
+       // 1. Try exact name match (normalized)
+       const normName = normalize(p.name);
+       if (normName && normName.length > 4) {
+          if (normLine.includes(normName)) {
+             console.log(`[PARSE-DEBUG] ✅ Match found via NAME: "${p.name}" (normalized: "${normName}")`);
+             matchedProp = p;
+             break;
+          }
+       }
+
+       // 2. Try partial address match
        if (p.address && p.address.length > 5) {
-          const normAddr = normalizeAddress(p.address);
+          const normAddr = normalize(p.address);
           
           // Full normalized include:
-          if (normalizedLine.includes(normAddr)) {
+          if (normLine.includes(normAddr)) {
+             console.log(`[PARSE-DEBUG] ✅ Match found via FULL ADDRESS: "${p.address}" (normalized: "${normAddr}")`);
              hasAddress = true;
           } else {
-             // Fallback: match first 3 tokens (e.g. "31", "linden", "ave")
+             // Fallback: match first 2 tokens (usually number + street name)
              const addrTokens = normAddr.split(' ');
              if (addrTokens.length >= 2) {
-               const coreTokens = addrTokens.slice(0, 3).join(' '); // "31 linden ave"
-               if (coreTokens.length > 5 && normalizedLine.includes(coreTokens)) {
+               const coreTokens = addrTokens.slice(0, 2).join(' '); 
+               if (coreTokens.length > 4 && normLine.includes(coreTokens)) {
+                 console.log(`[PARSE-DEBUG] ✅ Match found via CORE TOKENS: "${coreTokens}"`);
                  hasAddress = true;
                }
+             }
+
+             // Fallback 2: Token overlap (match at least 2 significant tokens)
+             if (!hasAddress && addrTokens.length >= 2) {
+                const lineTokens = new Set(normLine.split(' '));
+                let matches = 0;
+                let matchedWords = [];
+                for (const t of addrTokens.slice(0, 4)) {
+                   if (t.length > 2 && lineTokens.has(t)) {
+                      matches++;
+                      matchedWords.push(t);
+                   }
+                }
+                if (matches >= 2) {
+                   console.log(`[PARSE-DEBUG] ✅ Match found via TOKEN OVERLAP (${matches} words: ${matchedWords.join(', ')}): "${p.address}"`);
+                   hasAddress = true;
+                }
              }
           }
        }
        
-       if (hasAddress || hasName) {
+       if (hasAddress) {
            matchedProp = p;
            break;
        }
+    }
+
+    if (!matchedProp) {
+        console.log(`[PARSE-DEBUG] ❌ SEARCHING HISTORY fallback for: ${extractedPhone}`);
+        // Fallback: Check local message history for this phone number to find a property
+        try {
+           const history = db.prepare(`
+             SELECT m.body FROM messages m
+             JOIN conversations c ON c.id = m.conversation_id
+             JOIN contacts ct ON ct.id = c.contact_id
+             WHERE ct.phone_number = ?
+             ORDER BY m.created_at DESC LIMIT 15
+           `).all(extractedPhone) as { body: string }[];
+           
+           for (const msg of history) {
+              if (matchedProp) break;
+              const normMsg = normalize(msg.body);
+              for (const p of properties) {
+                 const nAddr = normalize(p.address);
+                 const nName = normalize(p.name);
+                 if ((nAddr.length > 5 && normMsg.includes(nAddr)) || (nName.length > 5 && normMsg.includes(nName))) {
+                    console.log(`[PARSE-DEBUG] 🎯 SUCCESS: Matched via message history: ${p.name}`);
+                    matchedProp = p;
+                    break;
+                 }
+              }
+           }
+        } catch(e) {}
+    }
+
+    if (!matchedProp) {
+        console.log(`[PARSE-DEBUG] ❌ PERMANENT FAILURE: No property matched for row: "${line}"`);
     }
 
     const uniqueKey = `${extractedPhone}-${matchedProp ? matchedProp.id : 'unmatched'}`;
