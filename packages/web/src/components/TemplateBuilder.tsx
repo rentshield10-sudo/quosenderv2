@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import './TemplateBuilder.css';
-import { Copy, Save, Trash2 } from 'lucide-react';
+import { Copy, Save, Trash2, GripVertical } from 'lucide-react';
 
 const API_URL = '/api';
 
@@ -172,6 +172,8 @@ const buildHighlightedNodes = (
 export function TemplateBuilder() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
+  
+  const [draggedPropId, setDraggedPropId] = useState<string | null>(null);
 
   const [activePropId, setActivePropId] = useState<string>('');
   const [activeTmplId, setActiveTmplId] = useState<string>('');
@@ -200,7 +202,27 @@ export function TemplateBuilder() {
         const derived = deriveCityState(prop.address, prop.city, prop.state);
         return { ...prop, ...derived };
       });
-      setProperties(normalized);
+      
+      setProperties(prev => {
+        let idToIndex = new Map<string, number>();
+        const savedOrderRaw = localStorage.getItem('properties_order');
+        if (savedOrderRaw) {
+          try {
+            const parsed = JSON.parse(savedOrderRaw);
+            if (Array.isArray(parsed)) {
+              idToIndex = new Map(parsed.map((id, i) => [id, i]));
+            }
+          } catch { }
+        } else if (prev.length > 0) {
+          idToIndex = new Map(prev.map((p, i) => [p.id, i]));
+        }
+
+        return normalized.sort((a, b) => {
+          const iA = idToIndex.has(a.id) ? idToIndex.get(a.id)! : Infinity;
+          const iB = idToIndex.has(b.id) ? idToIndex.get(b.id)! : Infinity;
+          return iA - iB;
+        });
+      });
 
       const refList = normalized;
 
@@ -390,6 +412,33 @@ export function TemplateBuilder() {
       ref.focus();
       ref.setSelectionRange(cursor, cursor);
     });
+  };
+
+  // --- Drag and Drop: Properties ---
+  const handleDragStartProp = (e: React.DragEvent, id: string) => {
+    setDraggedPropId(id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOverProp = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    if (!draggedPropId || draggedPropId === targetId) return;
+
+    const sourceIndex = properties.findIndex(p => p.id === draggedPropId);
+    const targetIndex = properties.findIndex(p => p.id === targetId);
+
+    if (sourceIndex > -1 && targetIndex > -1) {
+      const reordered = [...properties];
+      const sourceElement = reordered[sourceIndex];
+      reordered.splice(sourceIndex, 1);
+      reordered.splice(targetIndex, 0, sourceElement);
+      setProperties(reordered);
+    }
+  };
+
+  const handleDragEndProp = () => {
+    setDraggedPropId(null);
+    localStorage.setItem('properties_order', JSON.stringify(properties.map(p => p.id)));
   };
 
   // --- CRUD: Properties ---
@@ -592,15 +641,42 @@ export function TemplateBuilder() {
                   + New Address
                 </button>
                 {properties.map(p => (
-                  <button
-                    type="button"
+                  <div 
                     key={p.id}
-                    className={`tb-list-item ${activePropId === p.id ? 'is-active' : ''}`}
-                    onClick={() => setActivePropId(p.id)}
-                    disabled={propSaving}
+                    draggable
+                    onDragStart={(e) => handleDragStartProp(e, p.id)}
+                    onDragOver={(e) => handleDragOverProp(e, p.id)}
+                    onDragEnd={handleDragEndProp}
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center',
+                      gap: 4,
+                      opacity: draggedPropId === p.id ? 0.5 : 1,
+                      marginBottom: 4
+                    }}
                   >
-                    {p.name}
-                  </button>
+                    <div 
+                      style={{ 
+                        cursor: 'grab', 
+                        padding: '4px', 
+                        color: '#64748b',
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                      title="Drag to reorder"
+                    >
+                      <GripVertical size={16} />
+                    </div>
+                    <button
+                      type="button"
+                      className={`tb-list-item ${activePropId === p.id ? 'is-active' : ''}`}
+                      style={{ flex: 1, margin: 0, paddingLeft: 8 }}
+                      onClick={() => setActivePropId(p.id)}
+                      disabled={propSaving}
+                    >
+                      {p.name}
+                    </button>
+                  </div>
                 ))}
               </div>
 

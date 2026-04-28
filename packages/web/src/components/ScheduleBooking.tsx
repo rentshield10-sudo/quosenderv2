@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Clock, Check, CheckCheck, AlertCircle, MessageSquareOff, ChevronDown } from 'lucide-react';
+import { JobQueue, JobQueueRef } from './JobQueue';
 
 const API_URL = '/api/schedule-booking';
 
@@ -35,9 +36,11 @@ export const ScheduleBooking = () => {
   const [templates, setTemplates] = useState<any[]>([]);
   const [composerText, setComposerText] = useState('');
   const [syncingQuo, setSyncingQuo] = useState(false);
-  const [isSendingFlow, setIsSendingFlow] = useState(false);
+  const [isSendingFlow, setIsSendingFlow] = useState(false); // Kept unused strictly so code isn't modified
+  const [activeJobs, setActiveJobs] = useState<any[]>([]);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const queueRef = useRef<JobQueueRef>(null);
 
   const handleRetrieve = async () => {
     if (!inputText.trim()) return;
@@ -110,8 +113,6 @@ export const ScheduleBooking = () => {
       if (reset && json.data.length === 0 && !isAfterSync) {
          // We must use activeContact from state, or rather the current phone number, but we don't have it in scope unless we pass it.
          // Wait, we need the phone number. Let's return the length so the caller can handle it.
-      } else if (reset) {
-         setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
       }
       return json.data.length;
     } catch (err) {
@@ -171,39 +172,33 @@ export const ScheduleBooking = () => {
   const handleSendFlow = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeContact || !composerText.trim() || isSendingFlow) return;
-    setIsSendingFlow(true);
-    try {
-      const res = await fetch(`${API_URL}/run-flow`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          inputs: {
-            parameters: activeContact.rawLine,
-            message: composerText,
-            phone: activeContact.phone
-          }
-        })
-      });
+    
+    const submittedText = composerText; // save for optimistic
+    
+    // Add optimistic message preview
+    const optimisticMsg: Message = {
+      id: `local-${Date.now()}`,
+      conversation_id: activeContact.conversation.id,
+      direction: 'outbound',
+      body: submittedText,
+      status: 'queued',
+      created_at: new Date().toISOString()
+    };
+    
+    setMessages(prev => [...prev, optimisticMsg]);
+    
+    // Push the job to our disconnected module
+    queueRef.current?.addJob({
+      phone: activeContact.phone,
+      message: submittedText,
+      rawLine: activeContact.rawLine,
+      conversationId: activeContact.conversation.id
+    }, () => {
+      // Background callback to sync just like before
+      handleSyncQuo(activeContact.phone, activeContact.conversation.id, true);
+    });
 
-      if (res.ok) {
-        // Clear composer as it was sent to the automation server
-        setComposerText('');
-        
-        // Wait 1.5 seconds for Quo's actual backend/API to register the new message 
-        // sent by Playwright, then silently pull it into our UI.
-        setTimeout(() => {
-          if (activeContact) {
-            handleSyncQuo(activeContact.phone, activeContact.conversation.id, true);
-          }
-        }, 1500);
-      } else {
-        console.error('Automation server returned error:', await res.text());
-      }
-    } catch (err) {
-      console.error('Failed to run AnyClick flow', err);
-    } finally {
-      setIsSendingFlow(false);
-    }
+    setComposerText('');
   };
 
   return (
@@ -246,7 +241,27 @@ export const ScheduleBooking = () => {
               <div style={{ flex: 1, overflowY: 'auto' }}>
                 {contacts.map((contact, idx) => {
                   const isActive = activeContact === contact;
-                  const preview = contact.conversation?.last_message_preview || 'No messages';
+                  const contactJobs = activeJobs.filter(j => j.phone === contact.phone);
+                  const latestJob = contactJobs.length > 0 ? contactJobs[contactJobs.length - 1] : null;
+                  
+                  let preview = contact.conversation?.last_message_preview || 'No messages';
+                  let statusColor = '#64748b';
+                  
+                  if (latestJob) {
+                    if (latestJob.status === 'completed') {
+                      preview = 'Message sent ✓';
+                      statusColor = '#10b981';
+                    } else if (latestJob.status === 'running') {
+                      preview = 'Sending message...';
+                      statusColor = '#3b82f6';
+                    } else if (latestJob.status === 'pending') {
+                      preview = 'Queued to send...';
+                      statusColor = '#f59e0b';
+                    } else if (latestJob.status === 'failed') {
+                      preview = 'Failed to send ❌';
+                      statusColor = '#ef4444';
+                    }
+                  }
                   
                   return (
                     <div 
@@ -262,7 +277,7 @@ export const ScheduleBooking = () => {
                       <div style={{ fontSize: 12, color: contact.property ? '#10b981' : '#f59e0b', marginBottom: 6 }}>
                         Property: {contact.property ? contact.property.name || contact.property.address : 'Unmatched'}
                       </div>
-                      <div style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{ fontSize: 12, color: statusColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {preview}
                       </div>
                     </div>
@@ -366,7 +381,6 @@ export const ScheduleBooking = () => {
                           </div>
                         ))
                       )}
-                      <div ref={messagesEndRef} />
                     </div>
                   </div>
 
@@ -391,6 +405,8 @@ export const ScheduleBooking = () => {
             </div>
           </div>
         )}
+
+        <JobQueue ref={queueRef} onChange={setActiveJobs} />
       </div>
     </div>
   );
