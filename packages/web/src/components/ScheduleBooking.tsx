@@ -38,9 +38,30 @@ export const ScheduleBooking = () => {
   const [syncingQuo, setSyncingQuo] = useState(false);
   const [isSendingFlow, setIsSendingFlow] = useState(false); // Kept unused strictly so code isn't modified
   const [activeJobs, setActiveJobs] = useState<any[]>([]);
+  const [autoFocusJobs, setAutoFocusJobs] = useState(false);
   
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const queueRef = useRef<JobQueueRef>(null);
+  const contactRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const activeContactRef = useRef<ParsedContact | null>(null);
+
+  useEffect(() => {
+    activeContactRef.current = activeContact;
+  }, [activeContact]);
+
+  useEffect(() => {
+    const runningJob = activeJobs.find(j => j.status === 'running');
+    if (runningJob && autoFocusJobs) {
+      const el = contactRefs.current[runningJob.phone];
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      const contact = contacts.find(c => c.phone === runningJob.phone);
+      if (contact && activeContactRef.current !== contact) {
+        setActiveContact(contact);
+      }
+    }
+  }, [activeJobs, autoFocusJobs, contacts]);
 
   const handleRetrieve = async () => {
     if (!inputText.trim()) return;
@@ -71,8 +92,10 @@ export const ScheduleBooking = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: phoneToSync })
       });
-      // Refresh local messages
-      await fetchMessages(convIdToSync, true, true);
+      // Refresh local messages ONLY if the user is currently viewing this thread!
+      if (activeContactRef.current?.conversation?.id === convIdToSync) {
+        await fetchMessages(convIdToSync, true, true);
+      }
       success = true;
     } catch (err) {
       console.error('Failed to sync Quo', err);
@@ -113,6 +136,13 @@ export const ScheduleBooking = () => {
       if (reset && json.data.length === 0 && !isAfterSync) {
          // We must use activeContact from state, or rather the current phone number, but we don't have it in scope unless we pass it.
          // Wait, we need the phone number. Let's return the length so the caller can handle it.
+      } else if (reset) {
+         // Scroll interior container without shifting the main page window
+         setTimeout(() => {
+           if (messagesContainerRef.current) {
+             messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+           }
+         }, 100);
       }
       return json.data.length;
     } catch (err) {
@@ -263,14 +293,18 @@ export const ScheduleBooking = () => {
                     }
                   }
                   
+                  const isRunning = contactJobs.some(j => j.status === 'running');
+                  
                   return (
                     <div 
                       key={idx}
+                      ref={el => { contactRefs.current[contact.phone] = el; }}
                       onClick={() => setActiveContact(contact)}
                       style={{ 
                         padding: 15, cursor: 'pointer', borderBottom: '1px solid #222',
-                        backgroundColor: isActive ? 'var(--bg-hover)' : 'transparent',
-                        transition: 'background-color 0.2s'
+                        backgroundColor: isActive ? '#1e293b' : isRunning ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                        borderLeft: isActive ? '4px solid #10b981' : isRunning ? '4px solid #3b82f6' : '4px solid transparent',
+                        transition: 'all 0.2s'
                       }}
                     >
                       <div style={{ fontWeight: 600, marginBottom: 4, color: '#e2e8f0' }}>{contact.phone}</div>
@@ -340,7 +374,7 @@ export const ScheduleBooking = () => {
                     )}
 
                     {/* Message List */}
-                    <div className="messages-container" style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
+                    <div ref={messagesContainerRef} className="messages-container" style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
                       {hasMoreMsgs ? (
                         <div className="load-more-btn" style={{ margin: '0 auto', cursor: 'pointer' }} onClick={() => fetchMessages(activeContact.conversation.id, false)}>
                           Load earlier...
@@ -406,6 +440,17 @@ export const ScheduleBooking = () => {
           </div>
         )}
 
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 15, marginBottom: 5 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#aaa', fontSize: 13, cursor: 'pointer' }}>
+            <input 
+              type="checkbox" 
+              checked={autoFocusJobs} 
+              onChange={e => setAutoFocusJobs(e.target.checked)} 
+              style={{ cursor: 'pointer', height: 14, width: 14 }}
+            />
+            Auto-focus on active automation jobs
+          </label>
+        </div>
         <JobQueue ref={queueRef} onChange={setActiveJobs} />
       </div>
     </div>

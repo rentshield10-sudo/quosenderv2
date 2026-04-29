@@ -149,9 +149,7 @@ scheduleBookingRouter.post('/parse-and-load', (req, res) => {
         console.log(`[PARSE-DEBUG] ❌ PERMANENT FAILURE: No property matched for row: "${line}"`);
     }
 
-    const uniqueKey = `${extractedPhone}-${matchedProp ? matchedProp.id : 'unmatched'}`;
-    if (seenMatches.has(uniqueKey)) continue;
-    seenMatches.add(uniqueKey);
+    // Deduplication has been completely removed to strictly follow the raw input list
 
     // Load or create conversation to get the thread ID
     const conv = conversationService.findOrCreate(extractedPhone, 'sms');

@@ -21,14 +21,15 @@ export type JobQueueProps = {
 export const JobQueue = forwardRef<JobQueueRef, JobQueueProps>((props, ref) => {
   const [jobs, setJobs] = useState<(JobData & { id: string; status: 'pending' | 'running' | 'completed' | 'failed'; error?: string; onComplete?: () => void })[]>([]);
 
-  // Helper to reliably update parent
   const updateJobs = (updater: typeof jobs | ((prev: typeof jobs) => typeof jobs)) => {
-    setJobs(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
-      if (props.onChange) props.onChange(next);
-      return next;
-    });
+    setJobs(updater);
   };
+
+  useEffect(() => {
+    if (props.onChange) {
+      props.onChange(jobs);
+    }
+  }, [jobs, props]);
 
   useImperativeHandle(ref, () => ({
     addJob: (job, onComplete) => {
