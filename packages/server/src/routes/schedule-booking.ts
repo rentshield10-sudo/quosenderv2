@@ -5,7 +5,7 @@ import { messageService } from '../services/message.service';
 
 export const scheduleBookingRouter = Router();
 
-scheduleBookingRouter.post('/parse-and-load', (req, res) => {
+scheduleBookingRouter.post('/parse-and-load', async (req, res) => {
   const { text } = req.body;
   if (!text) return res.json({ data: [] });
 
@@ -162,7 +162,41 @@ scheduleBookingRouter.post('/parse-and-load', (req, res) => {
     });
   }
 
-  res.json({ data: results });
+  // Strictly sync from Quo live before returning to avoid cache
+    const uniquePhones = Array.from(new Set<string>(results.map(r => r.phone)));
+    if (uniquePhones.length > 0) {
+        try {
+            const { quoClient } = await import('../services/quo.client');
+            const allowedInboxNumber = 'PNAO2aXSml';
+
+            const chunkSize = 10;
+            for (let i = 0; i < uniquePhones.length; i += chunkSize) {
+                const chunk = uniquePhones.slice(i, i + chunkSize);
+                await Promise.all(chunk.map(async (phone) => {
+                    try {
+                        const page = await quoClient.listMessages(allowedInboxNumber, [phone], { limit: 1 });
+                        if (page.data && page.data.length > 0) {
+                            const first = page.data[0];
+                            const previewText = (first.body || first.text || '').toString().slice(0, 200);
+                            const localConv = conversationService.findOrCreate(phone, 'sms');
+                            conversationService.updateLastMessage(localConv.id, previewText, false, first.createdAt || new Date().toISOString());
+                            
+                            // Reflect LIVE update instantly into the result array
+                            for (const r of results) {
+                                if (r.phone === phone) {
+                                    r.conversation.last_message_preview = previewText;
+                                }
+                            }
+                        }
+                    } catch (e) {}
+                }));
+            }
+        } catch (e) {
+            console.error('Bulk Quo load error', e);
+        }
+    }
+
+    res.json({ data: results });
 });
 
 scheduleBookingRouter.get('/messages/:conversationId', (req, res) => {
@@ -225,10 +259,12 @@ scheduleBookingRouter.post('/sync-messages', async (req, res) => {
      
      if (page.data && page.data.length > 0) {
         const first = page.data[0];
-        conversationService.updateLastMessage(localConv.id, (first.body || first.text || '').toString().slice(0, 200), false, first.createdAt || new Date().toISOString());
+        const previewText = (first.body || first.text || '').toString().slice(0, 200);
+        conversationService.updateLastMessage(localConv.id, previewText, false, first.createdAt || new Date().toISOString());
+        res.json({ success: true, count: inserted, preview: previewText });
+     } else {
+        res.json({ success: true, count: inserted });
      }
-     
-     res.json({ success: true, count: inserted });
   } catch (err) {
      console.error('POST /schedule-booking/sync-messages error:', err);
      res.status(500).json({ error: 'Failed to sync' });

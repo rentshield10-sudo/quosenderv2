@@ -87,11 +87,23 @@ export const ScheduleBooking = () => {
     if (!silent) setSyncingQuo(true);
     let success = false;
     try {
-      await fetch(`${API_URL}/sync-messages`, {
+      const resp = await fetch(`${API_URL}/sync-messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: phoneToSync })
       });
+      const data = await resp.json();
+      
+      // If Quo had a newer message, physically update the sidebar left-pane preview!
+      if (data.preview) {
+         setContacts(prev => prev.map(c => {
+             if (c.phone === phoneToSync) {
+                 return { ...c, conversation: { ...c.conversation, last_message_preview: data.preview } };
+             }
+             return c;
+         }));
+      }
+
       // Refresh local messages ONLY if the user is currently viewing this thread!
       if (activeContactRef.current?.conversation?.id === convIdToSync) {
         await fetchMessages(convIdToSync, true, true);
@@ -155,11 +167,12 @@ export const ScheduleBooking = () => {
 
   const loadThreadAndSyncIfEmpty = async (contact: ParsedContact) => {
     setComposerText('');
-    const count = await fetchMessages(contact.conversation.id, true);
-    if (count === 0) {
-       // Automatically sync from quo
-       await handleSyncQuo(contact.phone, contact.conversation.id, false);
-    }
+    // 1. Instantly load whatever local history we have for a snappy UI
+    const localCount = await fetchMessages(contact.conversation.id, true);
+    
+    // 2. Always trigger a Quo sync so the UI eventually shows the true latest messages. 
+    // If local history exists, do it silently in the background.
+    await handleSyncQuo(contact.phone, contact.conversation.id, localCount > 0);
   };
 
   const fetchTemplates = async (propertyId: string) => {
@@ -270,7 +283,7 @@ export const ScheduleBooking = () => {
               </div>
               <div style={{ flex: 1, overflowY: 'auto' }}>
                 {contacts.map((contact, idx) => {
-                  const isActive = activeContact === contact;
+                  const isActive = activeContact && activeContact.phone === contact.phone && activeContact.property?.id === contact.property?.id && activeContact.rawLine === contact.rawLine;
                   const contactJobs = activeJobs.filter(j => j.phone === contact.phone);
                   const latestJob = contactJobs.length > 0 ? contactJobs[contactJobs.length - 1] : null;
                   
