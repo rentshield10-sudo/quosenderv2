@@ -282,12 +282,14 @@ scheduleBookingRouter.post('/run-flow', async (req, res) => {
 
     // Call the external AnyClick Playwright automation standard endpoint
     // Using 127.0.0.1 instead of localhost to bypass Node's IPv6 resolution preference which causes ECONNREFUSED
+    const outboundPayload = payload.inputs ? payload : { inputs: payload };
+    
     const response = await fetch('http://127.0.0.1:3001/flows/flow_1776996361867_nxr811/run', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(outboundPayload) 
     });
     
     if (!response.ok) {
@@ -295,7 +297,11 @@ scheduleBookingRouter.post('/run-flow', async (req, res) => {
     }
     
     const data = await response.json();
-    res.json(data);
+    res.json({
+      success: true,
+      receivedPayload: payload,
+      automationResult: data
+    });
   } catch (err: any) {
     console.error('Error running flow:', err);
     res.status(500).json({ error: 'Failed to trigger flow', message: err.message });

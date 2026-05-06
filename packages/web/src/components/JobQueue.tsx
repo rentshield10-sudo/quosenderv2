@@ -53,7 +53,7 @@ export const JobQueue = forwardRef<JobQueueRef, JobQueueProps>((props, ref) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             inputs: {
-              parameters: nextJob.rawLine,
+              parameters: nextJob.phone,
               message: nextJob.message,
               phone: nextJob.phone
             }

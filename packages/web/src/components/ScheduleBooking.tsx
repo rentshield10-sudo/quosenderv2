@@ -372,6 +372,7 @@ export const ScheduleBooking = () => {
                               onClick={() => fillTemplate(t.body)}
                               title={preview}
                               style={{
+                                flexShrink: 0,
                                 backgroundColor: '#1e293b', border: '1px solid #334155', color: '#e2e8f0',
                                 padding: '10px 14px', borderRadius: 8, fontSize: 13, cursor: 'pointer',
                                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)', transition: 'all 0.2s',

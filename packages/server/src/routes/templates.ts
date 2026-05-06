@@ -94,6 +94,73 @@ templatesRouter.delete('/:id', (req, res) => {
   res.json({ success: true });
 });
 
+templatesRouter.post('/render', (req, res) => {
+  const { templateId, apt_address, lead_name, phone } = req.body;
+  if (!templateId) return res.status(400).json({ success: false, error: 'templateId is required' });
+  if (!apt_address) return res.status(400).json({ success: false, error: 'apt_address is required' });
+
+  // 1. Find template
+  const template = db.prepare('SELECT * FROM templates WHERE id = ?').get(templateId) as { id: string, name: string, body: string } | undefined;
+  if (!template) return res.status(404).json({ success: false, error: 'Template not found' });
+
+  // 2. Find property matching address (fuzzy match)
+  const property = db.prepare('SELECT * FROM properties WHERE address LIKE ?').get(`%${apt_address}%`) as Record<string, any> | undefined;
+  if (!property) return res.status(404).json({ success: false, error: 'Apartment/Property not found for the given address' });
+
+  // 3. Render template using combined property fields and input payload (lead_name, phone)
+  const context: Record<string, any> = { ...property, lead_name, phone };
+  
+  const renderedMessage = template.body.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (match, key) => {
+    const value = context[key.trim()];
+    return value !== undefined && value !== null ? value : match;
+  });
+
+  res.json({
+    success: true,
+    templateId: template.id,
+    message: renderedMessage
+  });
+});
+
+// ==== ENDPOINT FOR N8N BY ADDRESS ====
+templatesRouter.post('/render-by-address', (req, res) => {
+  const { apt_address, templateKey } = req.body;
+  if (!apt_address) return res.status(400).json({ success: false, error: 'apt_address is required' });
+  if (!templateKey) return res.status(400).json({ success: false, error: 'templateKey is required' });
+
+  // 1. Find template by fuzzy matching the templateKey string
+  let templateQuery = '';
+  if (templateKey === 'initial_outreach') {
+     templateQuery = '%Initial Outreach%';
+  } else {
+     templateQuery = `%${templateKey}%`;
+  }
+  
+  const template = db.prepare('SELECT * FROM templates WHERE name LIKE ?').get(templateQuery) as { id: string, name: string, body: string } | undefined;
+  if (!template) return res.status(404).json({ success: false, error: 'Template not found' });
+
+  // 2. Find property matching address
+  const property = db.prepare('SELECT * FROM properties WHERE address LIKE ? OR name LIKE ?').get(`%${apt_address}%`, `%${apt_address}%`) as Record<string, any> | undefined;
+  if (!property) return res.status(404).json({ success: false, error: 'Apartment not found' });
+
+  // 3. Render template
+  const context: Record<string, any> = { ...property };
+  
+  const renderedMessage = template.body.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (match, key) => {
+    const value = context[key.trim()];
+    return value !== undefined && value !== null ? value : match;
+  });
+
+  res.json({
+    success: true,
+    apt_address: apt_address,
+    templateKey: templateKey,
+    templateId: template.id,
+    propertyId: property.id,
+    message: renderedMessage
+  });
+});
+
 // ==== PROPERTIES ====
 propertiesRouter.get('/', (req, res) => {
   const rows = db.prepare('SELECT * FROM properties ORDER BY created_at ASC').all();
