@@ -202,9 +202,22 @@ export const ScheduleBooking = () => {
 
   const renderTemplateString = (templateBody: string) => {
     if (!activeContact?.property) return templateBody;
-    const prop = activeContact.property;
+    
+    // Create a working copy of the property fields
+    const prop = { ...activeContact.property };
+
+    // Dynamically extract time (e.g. "6PM", "10:30 AM") straight out of the raw pasted line
+    const rawMatch = activeContact.rawLine.match(/\b\d{1,2}(?::\d{2})?\s*(?:AM|PM|am|pm)\b/i);
+    const parsedTime = rawMatch ? rawMatch[0].trim() : null;
+
+    // Explicitly bind the "schedule" and "time" variables so they work universally.
+    // Give priority to the database string parameter over the raw string extraction!
+    prop.schedule = prop.schedule || prop.default_schedule || parsedTime || prop.time || 'TBD';
+    prop.time = parsedTime || prop.time || 'TBD';
+
     return templateBody.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (match, key) => {
-      return prop[key.trim()] || match;
+      const val = prop[key.trim()];
+      return val !== undefined && val !== null ? val : match;
     });
   };
 

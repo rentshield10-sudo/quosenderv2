@@ -144,8 +144,12 @@ templatesRouter.post('/render-by-address', (req, res) => {
   if (!property) return res.status(404).json({ success: false, error: 'Apartment not found' });
 
   // 3. Render template
-  const context: Record<string, any> = { ...property };
+  const context: Record<string, any> = { ...property, ...req.body };
   
+  // Implicit UI synch: Map 'schedule' explicitly to default_schedule if not manually overridden by n8n
+  // Give priority to the user's manual database mapping over explicit times
+  context.schedule = context.schedule || context.default_schedule || context.time || 'TBD';
+
   const renderedMessage = template.body.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (match, key) => {
     const value = context[key.trim()];
     return value !== undefined && value !== null ? value : match;
