@@ -114,6 +114,46 @@ export const JobQueue = forwardRef<JobQueueRef, JobQueueProps>((props, ref) => {
           ))
         )}
       </div>
+
+      {/* FAILED LOGS WINDOW */}
+      <div style={{ marginTop: 25, border: '1px solid #7f1d1d', borderRadius: 8, backgroundColor: 'rgba(239, 68, 68, 0.05)', padding: 15 }}>
+        <h4 style={{ margin: '0 0 10px 0', color: '#ef4444', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <AlertCircle size={16} /> Persistent Execution Failures (Ghost Runs)
+        </h4>
+        <p style={{ fontSize: 12, color: '#fca5a5', marginTop: 0, marginBottom: 12 }}>
+          The backend attempted to execute these payloads via AnyClick 3 times but the Quo API confirmed they were not visually sent. You must review these manually.
+        </p>
+
+        {jobs.filter(j => j.status === 'failed').length === 0 ? (
+          <div style={{ fontSize: 13, color: '#94a3b8', fontStyle: 'italic', padding: '10px 0' }}>
+            No ghost runs detected. All automations passed API verification check.
+          </div>
+        ) : (
+          <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {jobs.filter(j => j.status === 'failed').map(job => (
+                <div key={`failed-${job.id}`} style={{ padding: 10, backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 6, borderLeft: '3px solid #ef4444' }}>
+                  <div style={{ fontSize: 13, color: '#e2e8f0', fontWeight: 600, display: 'flex', justifyContent: 'space-between' }}>
+                    <span>{job.phone}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4, whiteSpace: 'pre-wrap' }}>
+                    {job.message}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#fca5a5', marginTop: 6 }}>
+                    Raw Input: {job.rawLine}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button 
+               onClick={() => setJobs(prev => prev.filter(j => j.status !== 'failed'))}
+               style={{ marginTop: 15, backgroundColor: 'transparent', border: '1px solid #ef4444', color: '#ef4444', padding: '6px 12px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}
+            >
+              Clear Error Logs
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 });

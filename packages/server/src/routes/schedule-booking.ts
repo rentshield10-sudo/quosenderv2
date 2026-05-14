@@ -280,27 +280,79 @@ scheduleBookingRouter.post('/run-flow', async (req, res) => {
     console.log(JSON.stringify(payload, null, 2));
     console.log('-----------------------------------');
 
-    // Call the external AnyClick Playwright automation standard endpoint
-    // Using 127.0.0.1 instead of localhost to bypass Node's IPv6 resolution preference which causes ECONNREFUSED
     const outboundPayload = payload.inputs ? payload : { inputs: payload };
+    const targetPhone = outboundPayload.inputs.phone;
+    const targetMessage = outboundPayload.inputs.message;
     
-    const response = await fetch('http://127.0.0.1:3001/flows/flow_1776996361867_nxr811/run', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(outboundPayload) 
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Automation server responded with status: ${response.status}`);
+    let attempt = 0;
+    const maxAttempts = 3;
+    let finalData = null;
+    let isGhostFail = true;
+
+    while (attempt < maxAttempts) {
+      attempt++;
+      console.log(`[SCHEDULE-BOOKING RUN-FLOW] Attempt ${attempt}/${maxAttempts} for ${targetPhone}`);
+      
+      const response = await fetch('http://127.0.0.1:3001/flows/flow_1776996361867_nxr811/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(outboundPayload) 
+      });
+      
+      if (!response.ok) {
+        if (attempt >= maxAttempts) throw new Error(`Automation server responded with status: ${response.status}`);
+        continue;
+      }
+      
+      finalData = await response.json();
+
+      // Wait 1.5s for Quo's server to register the new outbound message internally
+      await new Promise(r => setTimeout(r, 1500));
+
+      const { quoClient } = await import('../services/quo.client');
+      const allowedInboxNumber = 'PNAO2aXSml';
+      const page = await quoClient.listMessages(allowedInboxNumber, [targetPhone], { limit: 5 });
+
+      let found = false;
+      const cleanTargetMsg = String(targetMessage).replace(/\s+/g, ' ').trim();
+
+      for (const msg of page.data || []) {
+        const diffMins = (Date.now() - new Date(msg.createdAt || Date.now()).getTime()) / 60000;
+        
+        // If it's a recent outbound message 
+        if ((msg.direction === 'outbound' || msg.direction === 'outgoing') && diffMins < 5) {
+           const cleanActual = String(msg.body || msg.text || '').replace(/\s+/g, ' ').trim();
+           
+           // If the first 15 characters match, or it's strongly related, it was absolutely sent successfully
+           if (cleanActual.length > 5 && (cleanActual.includes(cleanTargetMsg.slice(0, 15)) || cleanTargetMsg.includes(cleanActual.slice(0, 15)))) {
+               found = true;
+               break;
+           }
+        }
+      }
+
+      if (found) {
+         isGhostFail = false;
+         console.log(`[SCHEDULE-BOOKING RUN-FLOW] ✅ Message verified securely via Quo API on attempt ${attempt}.`);
+         break;
+      } else {
+         console.log(`[SCHEDULE-BOOKING RUN-FLOW] ⚠️ Ghost run detected on attempt ${attempt}. Message not found. Retrying...`);
+      }
+    }
+
+    if (isGhostFail) {
+      console.log(`[SCHEDULE-BOOKING RUN-FLOW] ❌ Permanent Ghost Failure entirely exhausted 3 attempts for ${targetPhone}.`);
+      return res.status(500).json({ 
+        success: false, 
+        ghost: true, 
+        error: 'Ghost Run: Failed to locate the sent message inside Quo UI after 3 full Playwright automation loop attempts.' 
+      });
     }
     
-    const data = await response.json();
     res.json({
       success: true,
       receivedPayload: payload,
-      automationResult: data
+      automationResult: finalData
     });
   } catch (err: any) {
     console.error('Error running flow:', err);
